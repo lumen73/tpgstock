@@ -1,19 +1,28 @@
-<!DOCTYPE html>
-<html>
+<?php
+/*
+ * FICHIER : deconnexion.php
+ * RÔLE    : fermer proprement la session de l'utilisateur.
+ */
+require __DIR__ . '/connexion.php';
 
-<head>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
-	<title></title>
-</head>
+// Efface toutes les données conservées dans la session.
+$_SESSION = [];
 
-<body>
-	<?php
-	session_start();
-	session_destroy();
-	header("location:index.php");
-	?>
-</body>
+// Supprime également le cookie de session du navigateur.
+if (ini_get('session.use_cookies')) {
+    $parameters = session_get_cookie_params();
+    setcookie(
+        session_name(),
+        '',
+        time() - 42000,
+        $parameters['path'],
+        $parameters['domain'],
+        $parameters['secure'],
+        $parameters['httponly']
+    );
+}
 
-</html>
+// Détruit la session côté serveur puis revient à la page de connexion.
+session_destroy();
+header('Location: index.php');
+exit;

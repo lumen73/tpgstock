@@ -1,0 +1,55 @@
+# Secrets et configuration locale
+.env
+.env.*
+!.env.example
+!.env.sample
+config.local.php
+config.local.*.php
+
+# Identifiants et sauvegardes de base de données locales
+/utilisateur.sql
+/database/dumps/
+*_dump.sql
+*_backup.sql
+*.sql.gz
+*.dump
+*.sqlite
+*.sqlite3
+*.db
+
+# Dépendances et fichiers générés
+/vendor/
+/node_modules/
+/bower_components/
+/build/
+/dist/
+/coverage/
+/.phpunit.cache/
+.phpunit.result.cache
+
+# Journaux, caches et fichiers temporaires
+/logs/
+/cache/
+/tmp/
+/temp/
+*.log
+error_log
+php_errorlog
+*.tmp
+*.bak
+*.old
+*.swp
+*.swo
+*~
+
+# Documents rangés par erreur avec les photos de l'application
+/photos/*.docx
+/photos/*.pdf
+
+# Réglages privés des éditeurs et fichiers du système
+/.vscode/
+/.idea/
+*.iml
+.DS_Store
+Thumbs.db
+Desktop.ini

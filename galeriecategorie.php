@@ -1,55 +1,10 @@
 <?php
-require "connexion.php";
-?>
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-   <meta charset="UTF-8">
-   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <link rel="stylesheet" href="../bootstrap-5.3.0/css/bootstrap.min.css">
-   <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
-   <title>GALERIE</title>
-</head>
-
-<body>
-   <div class="container">
-      <div class="row">
-         <div class="col-md-3">
-            <img src="img/images.png" width="150" height="150" />
-            <?php
-            if (isset($_SESSION['nomuser'])) {
-               echo ' Bienvenu ' . $_SESSION['nomuser'];
-            }
-            ?>
-            <h4>MENU</h4>
-            <?php include "les menus.php" ?>
-         </div>
-         <div class="col-md-9">
-            <div style="float: right"><a href="deconnexion.php" class="btn btn-danger">Déconnexion</a></div> <br>
-            <h4>GALERIE CATEGORIE</h4>
-
-            <?php
-            $i = 0;
-            $q = $bd->query("SELECT photo,categorie, idcategorie FROM categories");
-            while ($d = $q->fetch()) {
-
-               $i++;
-            ?>
-               <a href="detailscategorie.php? id=<?php echo $d['idcategorie'] ?>& categorie=<?php echo $d['categorie'] ?>" title="Voir les détails">
-                  <img src="photos/<?php echo $d['photo'] ?>" alt="" width="200" height="200" style="border-radius: 10px">
-               </a>
-
-
-            <?php
-               if ($i % 3 == 0)
-                  echo '<br>';
-            }
-            ?>
-
-         </div>
-      </div>
-   </div>
-</body>
-
-</html>
+/*
+ * FICHIER : galeriecategorie.php
+ * RÔLE    : tableau de bord du stock.
+ * view permet de basculer entre articles et catégories.
+ */
+require __DIR__.'/connexion.php';require_auth();$view=(($_GET['view']??'articles')==='categories')?'categories':'articles';$categories=(int)$bd->query('SELECT COUNT(*) FROM categories')->fetchColumn();$articles=(int)$bd->query('SELECT COUNT(*) FROM articles')->fetchColumn();$stock=(int)$bd->query('SELECT COALESCE(SUM(quantite),0) FROM articles')->fetchColumn();
+if($view==='categories'){$items=$bd->query('SELECT c.idcategorie,c.categorie,COUNT(a.idarticle) total FROM categories c LEFT JOIN articles a ON a.idcategorie=c.idcategorie GROUP BY c.idcategorie,c.categorie ORDER BY c.categorie')->fetchAll();}else{$items=$bd->query('SELECT a.idarticle,a.article,a.photo,a.quantite,a.prix,a.description,c.idcategorie,c.categorie FROM articles a LEFT JOIN categories c ON c.idcategorie=a.idcategorie ORDER BY a.idarticle DESC')->fetchAll();}
+page_start('Vue d’ensemble','home');
+?><style>.view-switch{display:flex;gap:8px;margin:0 0 22px}.article-gallery,.category-gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;padding:18px}.article-card,.category-view-card{display:block;background:var(--panel);border-radius:14px;overflow:hidden;text-decoration:none;color:inherit;box-shadow:var(--shadow)}.article-card img,.article-placeholder{width:100%;height:180px;object-fit:cover;background:#eef0eb}.article-placeholder{display:grid;place-items:center;color:var(--muted)}.article-card-body,.category-view-card{padding:16px}.article-card h3,.category-view-card h3{margin:0 0 7px}.article-card p,.category-view-card p{color:var(--muted);min-height:34px}.article-meta{display:flex;justify-content:space-between;color:#9b7a43;font-size:12px}.category-view-card{min-height:130px}.category-view-card small{color:var(--muted)}</style><div class="eyebrow">Votre commerce, en un regard</div><div class="heading-row"><div><h1>Bonjour <?=e($_SESSION['nomuser'])?></h1><p>Consultez chaque article ou parcourez votre stock par catégorie.</p></div><a class="btn btn-primary" href="Ajoutearticle.php">＋ Nouvel article</a></div><div class="metric-grid"><div class="metric"><small>Catégories actives</small><strong><?=number_format($categories,0,',',' ')?></strong><span class="badge">Organisation</span></div><div class="metric"><small>Articles enregistrés</small><strong><?=number_format($articles,0,',',' ')?></strong><span class="badge">Catalogue</span></div><div class="metric"><small>Articles en stock</small><strong><?=number_format($stock,0,',',' ')?></strong><span class="badge">Disponible</span></div></div><div class="view-switch"><a class="btn <?=$view==='articles'?'btn-primary':'btn-quiet'?>" href="galeriecategorie.php?view=articles">Afficher les articles</a><a class="btn <?=$view==='categories'?'btn-primary':'btn-quiet'?>" href="galeriecategorie.php?view=categories">Afficher par catégorie</a></div><section class="panel"><div class="panel-head"><div><h2><?=$view==='articles'?'Tous les articles':'Toutes les catégories'?></h2><small><?=$view==='articles'?'Cliquez sur un article pour voir sa fiche complète.':'Cliquez sur une catégorie pour voir ses articles.'?></small></div></div><?php if(!$items):?><div class="empty">Aucun élément pour le moment.</div><?php elseif($view==='categories'):?><div class="category-gallery"><?php foreach($items as $c):?><a class="category-view-card" href="detailscategorie.php?id=<?=(int)$c['idcategorie']?>"><h3><?=e($c['categorie'])?></h3><p>Consulter les articles et leurs photos.</p><small><?=$c['total']?> article(s)</small></a><?php endforeach?></div><?php else:?><div class="article-gallery"><?php foreach($items as $a):?><a class="article-card" href="detailsarticle.php?id=<?=(int)$a['idarticle']?>"><?php if($a['photo']):?><img src="photos/<?=rawurlencode((string)$a['photo'])?>" alt="<?=e($a['article'])?>"><?php else:?><div class="article-placeholder">Aucune photo</div><?php endif?><div class="article-card-body"><h3><?=e($a['article'])?></h3><p><?=e($a['categorie']??'Sans catégorie')?></p><div class="article-meta"><span>Stock : <b><?=number_format((int)$a['quantite'],0,',',' ')?></b></span><span><?=number_format((float)$a['prix'],2,',',' ')?></span></div></div></a><?php endforeach?></div><?php endif?></section><?php page_end();
